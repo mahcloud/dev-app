@@ -1,6 +1,9 @@
 Fizzbuzz::Application.routes.draw do
   get "home/index"
   root :to => "home#index"
+  match "/fizzbuzz/" => "fizzbuzz#range"
+  match "/fizzbuzz/:num" => "fizzbuzz#number"
+  match "/fizzbuzz/:start..:finish" => "fizzbuzz#range"
   # The priority is based upon order of creation:
   # first created -> highest priority.
 
