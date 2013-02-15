@@ -24,23 +24,7 @@ class FizzbuzzController < ApplicationController
       if partial_redis_val.nil?
         @fizzbuzz = FizzBuzz.buzz_range(@start, @finish)
       else
-        first = partial_redis_val[0]
-        last = partial_redis_val[1]
-        @fizzbuzz = check_redis(first, last)
-        if (first - @start) > 0
-          if (first - 1) == @start
-            @fizzbuzz.unshift(FizzBuzz.fizz_one(@start))
-          else
-            @fizzbuzz = FizzBuzz.buzz_range(@start, first - 1).concat(@fizzbuzz)
-          end
-        end
-        if (last - @finish) < 0
-          if (last + 1) == @finish
-            @fizzbuzz << FizzBuzz.fizz_one(@finish)
-          else
-            @fizzbuzz.concat(FizzBuzz.buzz_range(last + 1, @finish))
-          end
-        end
+        @fizzbuzz = build_partial_redis(partial_redis_val[0], partial_redis_val[1])
       end
       $redis.set(redis_str(@start, @finish), @fizzbuzz.to_s)
     else
@@ -62,7 +46,7 @@ class FizzbuzzController < ApplicationController
   def check_redis(start, finish)
     redis_val = $redis.get(redis_str(start, finish))
     unless redis_val.nil?
-      return eval(redis_val)
+      eval(redis_val)
     end
   end
 
@@ -84,5 +68,24 @@ class FizzbuzzController < ApplicationController
         return length_arr.first[1]
       end
     end
+  end
+
+  def build_partial_redis(first, last)
+    @fizzbuzz = check_redis(first, last)
+    if (first - @start) > 0
+      if (first - 1) == @start
+        @fizzbuzz.unshift(FizzBuzz.fizz_one(@start))
+      else
+        @fizzbuzz = FizzBuzz.buzz_range(@start, first - 1).concat(@fizzbuzz)
+      end
+    end
+    if (last - @finish) < 0
+      if (last + 1) == @finish
+        @fizzbuzz << FizzBuzz.fizz_one(@finish)
+      else
+        @fizzbuzz.concat(FizzBuzz.buzz_range(last + 1, @finish))
+      end
+    end
+    @fizzbuzz
   end
 end
